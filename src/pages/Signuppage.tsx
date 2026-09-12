@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import GoogleButton from '../components/GoogleButton';
+import { supabase } from '../lib/supabase';
 
 function getPasswordFeedback(password: string) {
   const checks = [
@@ -42,12 +43,30 @@ export default function SignupPage() {
       return;
     }
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    navigate('/hero', { state: { name: form.get('name'), email } });
+    const name = String(form.get('name') ?? '').trim();
+    const { data, error: signupError } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { data: { full_name: name } },
+    });
+    setLoading(false);
+    if (signupError) {
+      setError(signupError.message);
+      return;
+    }
+    if (data.session) {
+      navigate('/hero');
+    } else {
+      setError('Account created. Check your email to confirm your account, then sign in.');
+    }
   }
 
-  function handleGoogleSignup() {
-    navigate('/hero', { state: { name: 'Google member', email: 'Google account' } });
+  async function handleGoogleSignup() {
+    const { error: googleError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/hero` },
+    });
+    if (googleError) setError(googleError.message);
   }
 
   return (

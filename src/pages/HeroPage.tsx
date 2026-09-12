@@ -1,13 +1,41 @@
+import { useEffect, useState } from 'react';
 import { ArrowRight, Camera, Heart, LogOut, Shirt, Sparkles } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
-
-type AccountState = { name?: string; email?: string };
+import { Link, useNavigate } from 'react-router-dom';
+import type { User } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 
 export default function HeroPage() {
-  const location = useLocation();
-  const account = (location.state as AccountState | null) ?? {};
-  const displayName = account.name?.trim() || account.email?.split('@')[0] || 'there';
-  const displayEmail = account.email || 'your account email';
+  const [user, setUser] = useState<User | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getUser().then(({ data }) => {
+      if (active) {
+        setUser(data.user);
+        setCheckingSession(false);
+        if (data.user) {
+          void supabase.functions.invoke('send-welcome-email');
+        }
+      }
+    });
+    return () => { active = false; };
+  }, []);
+
+  if (checkingSession) return <main className="grid min-h-screen place-items-center bg-canvas font-body text-charcoal">Loading your fitting room...</main>;
+  if (!user) {
+    navigate('/login', { replace: true });
+    return null;
+  }
+
+  const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'there';
+  const displayEmail = user.email || 'your account email';
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    navigate('/login', { replace: true });
+  }
 
   return (
     <main className="member-hero min-h-screen bg-canvas text-ink">
@@ -15,7 +43,7 @@ export default function HeroPage() {
         <Link to="/" className="font-display text-[23px] font-semibold tracking-tightest">DrapeAI</Link>
         <div className="flex items-center gap-5 font-body text-[13px] text-charcoal">
           <span className="hidden sm:inline">{displayEmail}</span>
-          <Link to="/" className="inline-flex items-center gap-2 rounded-full border border-stoneDark/60 px-4 py-2 transition-colors hover:border-ink hover:text-ink"><LogOut size={14} /> Exit</Link>
+          <button type="button" onClick={handleLogout} className="inline-flex items-center gap-2 rounded-full border border-stoneDark/60 px-4 py-2 transition-colors hover:border-ink hover:text-ink"><LogOut size={14} /> Log out</button>
         </div>
       </nav>
 
