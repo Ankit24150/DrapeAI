@@ -104,3 +104,4 @@ uv.lock
 *.bmp
 *.tiff
 *.tif
+.venv311/
