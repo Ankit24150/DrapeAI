@@ -1,0 +1,39 @@
+[
+  {
+    "id": "g-001",
+    "title": "Classic White Oxford Shirt",
+    "category": "top",
+    "image_url": "/static/garments/sample_shirt.png",
+    "price": 45.0,
+    "available_colors": [
+      "#FFFFFF",
+      "#000000",
+      "#1D4ED8",
+      "#DC2626"
+    ]
+  },
+  {
+    "id": "g-002",
+    "title": "Casual Denim Jacket",
+    "category": "outerwear",
+    "image_url": "/static/garments/sample_jacket.png",
+    "price": 89.99,
+    "available_colors": [
+      "#1D4ED8",
+      "#1E293B",
+      "#64748B"
+    ]
+  },
+  {
+    "id": "g-003",
+    "title": "Summer Floral Dress",
+    "category": "dress",
+    "image_url": "/static/garments/sample_dress.png",
+    "price": 65.0,
+    "available_colors": [
+      "#F43F5E",
+      "#EAB308",
+      "#8B5CF6"
+    ]
+  }
+]
