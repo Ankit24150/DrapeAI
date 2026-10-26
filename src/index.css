@@ -182,3 +182,47 @@ textarea:focus-visible {
 @keyframes member-garment-float { 50% { transform: translate(-50%, calc(-50% - 10px)) rotateY(12deg); } }
 @media (max-width: 640px) { .member-garment { width: 125px; height: 190px; } }
 @media (prefers-reduced-motion: reduce) { .member-orbit, .member-garment { animation: none; } }
+
+.member-hero {
+  background: #f8f7f4;
+  color: #171717;
+  font-family: Inter, sans-serif;
+}
+.member-hero .member-serif {
+  font-family: "Iowan Old Style", Baskerville, "Times New Roman", serif;
+  font-weight: 400;
+}
+.member-hero .member-italic { font-style: italic; color: #8a6a3b; }
+.member-wordmark { color: #24221f; text-decoration: none; }
+.member-wordmark span { color: #987b54; }
+.member-nav-link::after {
+  position: absolute;
+  right: 0;
+  bottom: 5px;
+  left: 0;
+  height: 1px;
+  background: #987b54;
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 240ms ease;
+}
+.member-nav-link:hover::after { transform: scaleX(1); }
+.member-hero-image { isolation: isolate; }
+.member-category-card img,
+.member-note-card img { will-change: transform; }
+.member-style-option:focus-visible,
+.member-category-card:focus-visible,
+.member-hero a:focus-visible,
+.member-hero button:focus-visible {
+  outline: 2px solid #8a6a3b;
+  outline-offset: 3px;
+}
+@media (max-width: 640px) {
+  .member-hero .member-logout { padding-right: 0.85rem; padding-left: 0.85rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .member-nav-link::after { transition: none; }
+  .member-category-card img,
+  .member-note-card img { will-change: auto; }
+}
