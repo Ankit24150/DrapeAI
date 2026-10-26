@@ -1,23 +1,36 @@
 import { ArrowRight, Camera, Heart, LogOut, Shirt, Sparkles } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
-
-type AccountState = { name?: string; email?: string };
+import { useState } from 'react';
+import { Link, useNavigate, useOutletContext } from 'react-router-dom';
+import type { User } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 
 export default function HeroPage() {
-  const location = useLocation();
-  const account = (location.state as AccountState | null) ?? {};
-  const displayName = account.name?.trim() || account.email?.split('@')[0] || 'there';
-  const displayEmail = account.email || 'your account email';
+  const user = useOutletContext<User>();
+  const navigate = useNavigate();
+  const [logoutError, setLogoutError] = useState('');
+  const fullName = user.user_metadata?.full_name;
+  const displayName = (typeof fullName === 'string' ? fullName.trim() : '') || user.email?.split('@')[0] || 'there';
+  const displayEmail = user.email || 'your account email';
+
+  async function handleLogout() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      setLogoutError(error.message);
+      return;
+    }
+    navigate('/login', { replace: true });
+  }
 
   return (
     <main className="member-hero min-h-screen bg-canvas text-ink">
       <nav className="mx-auto flex max-w-content items-center justify-between px-6 py-6 md:px-10 md:py-8">
-        <Link to="/" className="font-display text-[23px] font-semibold tracking-tightest">DrapeAI</Link>
+        <Link to="/hero" className="font-display text-[23px] font-semibold tracking-tightest">DrapeAI</Link>
         <div className="flex items-center gap-5 font-body text-[13px] text-charcoal">
           <span className="hidden sm:inline">{displayEmail}</span>
-          <Link to="/" className="inline-flex items-center gap-2 rounded-full border border-stoneDark/60 px-4 py-2 transition-colors hover:border-ink hover:text-ink"><LogOut size={14} /> Exit</Link>
+          <button type="button" onClick={handleLogout} className="inline-flex items-center gap-2 rounded-full border border-stoneDark/60 px-4 py-2 transition-colors hover:border-ink hover:text-ink"><LogOut size={14} /> Log out</button>
         </div>
       </nav>
+      {logoutError && <p role="alert" className="mx-auto max-w-content px-6 text-right text-xs text-red-700 md:px-10">{logoutError}</p>}
 
       <section className="mx-auto grid max-w-content items-center gap-12 px-6 pb-16 pt-12 md:px-10 md:pb-24 md:pt-20 lg:grid-cols-[1fr_0.9fr] lg:gap-20">
         <div className="max-w-[590px]">

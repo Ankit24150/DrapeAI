@@ -3,6 +3,7 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signuppage';
 import HeroPage from './pages/HeroPage';
+import RequireAuth from './components/RequireAuth';
 
 export default function App() {
   return (
@@ -10,7 +11,9 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/hero" element={<HeroPage />} />
+      <Route element={<RequireAuth />}>
+        <Route path="/hero" element={<HeroPage />} />
+      </Route>
     </Routes>
   );
 }

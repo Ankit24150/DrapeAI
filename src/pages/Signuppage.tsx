@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import GoogleButton from '../components/GoogleButton';
+import { supabase } from '../lib/supabase';
 
 function getPasswordFeedback(password: string) {
   const checks = [
@@ -24,6 +25,7 @@ function isValidEmail(email: string) {
 export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const passwordFeedback = getPasswordFeedback(password);
@@ -32,22 +34,66 @@ export default function SignupPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
+    setMessage('');
     const form = new FormData(event.currentTarget);
+    const name = String(form.get('name') ?? '').trim();
+    if (!name) {
+      setError('Please enter your name.');
+      return;
+    }
     if (!isValidEmail(email)) {
       setError('Please enter a valid email address, like you@example.com.');
       return;
     }
-    if (form.get('password') !== form.get('confirmPassword')) {
+    if (password.length < 8) {
+      setError('Your password must be at least 8 characters.');
+      return;
+    }
+    if (password !== form.get('confirmPassword')) {
       setError("Those passwords don't match yet.");
       return;
     }
+    if (form.get('terms') !== 'on') {
+      setError('Please agree to the Terms of Service and Privacy Policy.');
+      return;
+    }
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    navigate('/hero', { state: { name: form.get('name'), email } });
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: { data: { full_name: name } },
+      });
+      if (signUpError) {
+        setError(signUpError.message);
+        return;
+      }
+      if (data.session) {
+        navigate('/hero', { replace: true });
+      } else {
+        setMessage('Account created. Check your email to confirm your address, then sign in.');
+      }
+    } catch (signUpError) {
+      setError(signUpError instanceof Error ? signUpError.message : 'Unable to create your account. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function handleGoogleSignup() {
-    navigate('/hero', { state: { name: 'Google member', email: 'Google account' } });
+  async function handleGoogleSignup() {
+    setError('');
+    setLoading(true);
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/hero` },
+      });
+      if (oauthError) setError(oauthError.message);
+    } catch (oauthError) {
+      setError(oauthError instanceof Error ? oauthError.message : 'Unable to start Google sign-up.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -56,7 +102,7 @@ export default function SignupPage() {
       title={<>Make room for<br />what's next.</>}
       description="Create your private fitting room and see your next outfit before you buy it."
     >
-      <GoogleButton label="Sign up with Google" onClick={handleGoogleSignup} />
+      <GoogleButton label="Sign up with Google" onClick={handleGoogleSignup} disabled={loading} />
       <div className="my-5 flex items-center gap-3 font-body text-[11px] uppercase tracking-[0.15em] text-charcoal/60"><span className="h-px flex-1 bg-stone" />or<span className="h-px flex-1 bg-stone" /></div>
       <form onSubmit={handleSubmit} className="auth-signup-form flex flex-col gap-3" noValidate>
         <label className="flex flex-col gap-2 font-body text-[12px] text-charcoal"><span>Full name</span><input className="auth-input" name="name" type="text" required placeholder="Your name" autoComplete="name" /></label>
@@ -66,8 +112,9 @@ export default function SignupPage() {
           <span className="normal-case tracking-normal text-[11px] text-charcoal/70">{passwordFeedback.suggestion ? `Suggestion: add ${passwordFeedback.suggestion}.` : 'Nice. This password meets all the basic checks.'}</span>
         </label>
         <label className="flex flex-col gap-2 font-body text-[12px] text-charcoal"><span>Confirm password</span><input className="auth-input" name="confirmPassword" type="password" required placeholder="Type it again" autoComplete="new-password" minLength={8} /></label>
-        <label className="mt-1 flex items-start gap-2 font-body text-[12px] leading-relaxed text-charcoal"><input type="checkbox" required className="mt-1 accent-brass" /><span>I agree to the <a href="/terms" className="text-brass hover:text-ink">Terms of Service</a> and <a href="/privacy" className="text-brass hover:text-ink">Privacy Policy</a>.</span></label>
+        <label className="mt-1 flex items-start gap-2 font-body text-[12px] leading-relaxed text-charcoal"><input name="terms" type="checkbox" required className="mt-1 accent-brass" /><span>I agree to the <a href="/terms" className="text-brass hover:text-ink">Terms of Service</a> and <a href="/privacy" className="text-brass hover:text-ink">Privacy Policy</a>.</span></label>
         {error && <p className="font-body text-[12px] text-red-700" role="alert">{error}</p>}
+        {message && <p className="font-body text-[12px] text-emerald-800" role="status">{message}</p>}
         <button type="submit" disabled={loading} className="auth-submit mt-2 w-full rounded-full bg-ink px-5 py-3.5 font-body text-[14px] text-canvas transition-colors hover:bg-brass disabled:opacity-60">{loading ? 'Creating account...' : 'Create account'}</button>
       </form>
       <p className="mt-5 text-center font-body text-[13px] text-charcoal">Already have an account? <Link to="/login" className="font-medium text-ink underline decoration-stoneDark underline-offset-4 hover:text-brass">Sign in</Link></p>
