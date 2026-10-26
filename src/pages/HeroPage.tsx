@@ -2,6 +2,12 @@ import { ArrowRight, Camera, Heart, LogOut, Shirt, Sparkles } from 'lucide-react
 import { useState } from 'react';
 import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
+import HowItWorks from '../components/HowItWorks';
+import Features from '../components/Features';
+import ProductShowcase from '../components/ProductShowcase';
+import TechPipeline from '../components/TechPipeline';
+import CTASection from '../components/CTASection';
+import Footer from '../components/Footer';
 import { supabase } from '../lib/supabase';
 
 export default function HeroPage() {
@@ -22,9 +28,15 @@ export default function HeroPage() {
   }
 
   return (
-    <main className="member-hero min-h-screen bg-canvas text-ink">
+    <main id="top" className="member-hero min-h-screen bg-canvas text-ink">
       <nav className="mx-auto flex max-w-content items-center justify-between px-6 py-6 md:px-10 md:py-8">
         <Link to="/hero" className="font-display text-[23px] font-semibold tracking-tightest">DrapeAI</Link>
+        <div className="hidden items-center gap-6 font-body text-[13px] text-charcoal lg:flex">
+          <a href="#how-it-works" className="transition-colors hover:text-brass">How it works</a>
+          <a href="#features" className="transition-colors hover:text-brass">Features</a>
+          <a href="#try-on" className="transition-colors hover:text-brass">Try-on preview</a>
+          <a href="#about" className="transition-colors hover:text-brass">About</a>
+        </div>
         <div className="flex items-center gap-5 font-body text-[13px] text-charcoal">
           <span className="hidden sm:inline">{displayEmail}</span>
           <button type="button" onClick={handleLogout} className="inline-flex items-center gap-2 rounded-full border border-stoneDark/60 px-4 py-2 transition-colors hover:border-ink hover:text-ink"><LogOut size={14} /> Log out</button>
@@ -56,6 +68,15 @@ export default function HeroPage() {
           <div className="absolute bottom-7 left-7 right-7 z-10 flex items-end justify-between md:bottom-10 md:left-10 md:right-10"><div><p className="font-body text-[10px] uppercase tracking-[0.16em] text-[#d9c29a]">Next up</p><p className="mt-2 font-display text-[25px] leading-none">Your first<br />new look</p></div><Camera size={24} strokeWidth={1.3} className="text-[#d9c29a]" /></div>
         </div>
       </section>
+
+      <HowItWorks />
+      <Features />
+      <div id="try-on" className="scroll-mt-20">
+        <ProductShowcase />
+      </div>
+      <TechPipeline />
+      <CTASection />
+      <Footer />
 
       <section className="border-t border-stone/70 bg-canvasDim/40"><div className="mx-auto flex max-w-content flex-wrap items-center justify-between gap-5 px-6 py-5 md:px-10"><p className="font-body text-[12px] text-charcoal">Signed in as <strong className="font-medium text-ink">{displayEmail}</strong></p><p className="font-body text-[12px] text-charcoal/70">Your photos stay private and yours.</p></div></section>
     </main>
