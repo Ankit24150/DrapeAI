@@ -8,3 +8,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export function getAuthRedirectUrl() {
+  return new URL('/auth/callback', window.location.origin).toString();
+}

@@ -2,7 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import GoogleButton from '../components/GoogleButton';
-import { supabase } from '../lib/supabase';
+import { getAuthRedirectUrl, supabase } from '../lib/supabase';
 
 function getPasswordFeedback(password: string) {
   const checks = [
@@ -62,7 +62,10 @@ export default function SignupPage() {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: { data: { full_name: name } },
+        options: {
+          data: { full_name: name },
+          emailRedirectTo: getAuthRedirectUrl(),
+        },
       });
       if (signUpError) {
         setError(signUpError.message);
@@ -86,7 +89,7 @@ export default function SignupPage() {
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/hero` },
+        options: { redirectTo: getAuthRedirectUrl() },
       });
       if (oauthError) setError(oauthError.message);
     } catch (oauthError) {

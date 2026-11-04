@@ -2,7 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import GoogleButton from '../components/GoogleButton';
-import { supabase } from '../lib/supabase';
+import { getAuthRedirectUrl, supabase } from '../lib/supabase';
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
@@ -46,7 +46,7 @@ export default function LoginPage() {
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/hero` },
+        options: { redirectTo: getAuthRedirectUrl() },
       });
       if (oauthError) setError(oauthError.message);
     } catch (oauthError) {
