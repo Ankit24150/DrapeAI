@@ -13,8 +13,10 @@ import {
   Sparkles,
   Sun,
   Upload,
+  UploadCloud,
 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
 import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import HowItWorks from '../components/HowItWorks';
@@ -50,10 +52,57 @@ const garments = [
   },
 ];
 
+function useImagePreview(file: File | null) {
+  const [previewUrl, setPreviewUrl] = useState('');
+
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl('');
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+
+  return previewUrl;
+}
+
+function acceptImageFile(
+  event: ChangeEvent<HTMLInputElement>,
+  setFile: Dispatch<SetStateAction<File | null>>,
+  setError: Dispatch<SetStateAction<string>>,
+) {
+  const input = event.currentTarget;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    setError('Choose an image file to continue.');
+    input.value = '';
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    setError('Choose an image smaller than 10 MB.');
+    input.value = '';
+    return;
+  }
+
+  setFile(file);
+  setError('');
+}
+
 export default function HeroPage() {
   const user = useOutletContext<User>();
   const navigate = useNavigate();
   const [logoutError, setLogoutError] = useState('');
+  const [garmentFile, setGarmentFile] = useState<File | null>(null);
+  const [personFile, setPersonFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState('');
+  const [analysisMessage, setAnalysisMessage] = useState('');
+  const garmentPreview = useImagePreview(garmentFile);
+  const personPreview = useImagePreview(personFile);
   const fullName = user.user_metadata?.full_name;
   const displayName = (typeof fullName === 'string' ? fullName.trim() : '') || user.email?.split('@')[0] || 'there';
   const displayEmail = user.email || 'your account email';
@@ -83,6 +132,10 @@ export default function HeroPage() {
   function resetPreviewTilt() {
     pointerX.set(0);
     pointerY.set(0);
+  }
+
+  function handleAnalyze() {
+    setAnalysisMessage('Both images are ready. AI try-on will be available when the rendering backend is connected.');
   }
 
   return (
@@ -124,9 +177,83 @@ export default function HeroPage() {
             <p className="mt-2 font-body text-[13px] text-slate-400">Preview the silhouette. Explore the details. Find your fit.</p>
           </div>
           <span className="studio-preview-label inline-flex items-center gap-2 rounded-full px-3 py-1.5 font-body text-[9px] uppercase tracking-[0.14em] text-slate-400">
-            <CircleHelp size={12} /> UI preview · controls are visual only
+            <CircleHelp size={12} /> Local image preview · AI backend pending
           </span>
         </div>
+
+        <section className="studio-upload-panel mb-6 rounded-2xl border p-4 sm:p-6">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="font-body text-[10px] uppercase tracking-[0.16em] text-cyan-300">Start a try-on</p>
+              <h2 className="mt-1 font-display text-[20px] text-white sm:text-[23px]">Add your photo and a garment</h2>
+            </div>
+            <p className="max-w-[360px] font-body text-[10px] leading-relaxed text-slate-500">Images are previewed locally in your browser. They aren’t uploaded to a server yet.</p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="studio-upload-card group relative flex min-h-[190px] cursor-pointer flex-col justify-between overflow-hidden rounded-xl border p-4 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/40 sm:min-h-[220px] sm:p-5">
+              <input
+                type="file"
+                accept="image/*"
+                aria-label="Upload a garment image"
+                className="sr-only"
+                onChange={(event) => {
+                  setAnalysisMessage('');
+                  acceptImageFile(event, setGarmentFile, setUploadError);
+                }}
+              />
+              {garmentPreview && <img src={garmentPreview} alt="" className="studio-upload-preview absolute inset-0 h-full w-full object-cover opacity-35 transition duration-500 group-hover:scale-105" />}
+              <span className="studio-upload-overlay absolute inset-0" />
+              <span className="relative z-10 flex items-start justify-between gap-3">
+                <span className="studio-upload-icon grid h-10 w-10 place-items-center rounded-xl text-cyan-200"><Shirt size={19} /></span>
+                <span className="rounded-full border border-white/10 bg-slate-950/50 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-slate-400">Step 01</span>
+              </span>
+              <span className="relative z-10 mt-8">
+                <span className="block font-display text-[17px] text-white">Upload a garment</span>
+                <span className="mt-1 block max-w-[360px] truncate font-body text-[11px] text-slate-400">{garmentFile?.name ?? 'Choose a clear image of the clothing you want to try.'}</span>
+                <span className="mt-3 inline-flex items-center gap-1.5 font-body text-[10px] text-cyan-200"><UploadCloud size={13} /> {garmentFile ? 'Choose a different image' : 'Choose garment image'}</span>
+              </span>
+            </label>
+
+            <label className="studio-upload-card group relative flex min-h-[190px] cursor-pointer flex-col justify-between overflow-hidden rounded-xl border p-4 transition duration-300 hover:-translate-y-1 hover:border-violet-400/40 sm:min-h-[220px] sm:p-5">
+              <input
+                type="file"
+                accept="image/*"
+                aria-label="Upload your photo"
+                className="sr-only"
+                onChange={(event) => {
+                  setAnalysisMessage('');
+                  acceptImageFile(event, setPersonFile, setUploadError);
+                }}
+              />
+              {personPreview && <img src={personPreview} alt="" className="studio-upload-preview absolute inset-0 h-full w-full object-cover opacity-35 transition duration-500 group-hover:scale-105" />}
+              <span className="studio-upload-overlay absolute inset-0" />
+              <span className="relative z-10 flex items-start justify-between gap-3">
+                <span className="studio-upload-icon studio-upload-icon-violet grid h-10 w-10 place-items-center rounded-xl text-violet-200"><Camera size={19} /></span>
+                <span className="rounded-full border border-white/10 bg-slate-950/50 px-2.5 py-1 font-body text-[9px] uppercase tracking-[0.12em] text-slate-400">Step 02</span>
+              </span>
+              <span className="relative z-10 mt-8">
+                <span className="block font-display text-[17px] text-white">Upload your photo</span>
+                <span className="mt-1 block max-w-[360px] truncate font-body text-[11px] text-slate-400">{personFile?.name ?? 'Use a clear, front-facing photo for the best result.'}</span>
+                <span className="mt-3 inline-flex items-center gap-1.5 font-body text-[10px] text-violet-200"><UploadCloud size={13} /> {personFile ? 'Choose a different image' : 'Choose your photo'}</span>
+              </span>
+            </label>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <p className="font-body text-[9px] text-slate-500">Image files only · maximum 10 MB each</p>
+            <button
+              type="button"
+              onClick={handleAnalyze}
+              disabled={!garmentFile || !personFile}
+              className="studio-analyze-button inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-body text-[11px] font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Sparkles size={14} /> Analyze with AI <ArrowRight size={14} />
+            </button>
+          </div>
+          {uploadError && <p className="mt-3 font-body text-[11px] text-red-300" role="alert">{uploadError}</p>}
+          {analysisMessage && <p className="mt-3 font-body text-[11px] text-cyan-100" role="status">{analysisMessage}</p>}
+        </section>
 
         <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_350px]">
           <section className="studio-preview-panel rounded-2xl border p-3 sm:p-5">
@@ -152,8 +279,8 @@ export default function HeroPage() {
                   style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
                 >
                   <img
-                    src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1400&auto=format&fit=crop"
-                    alt="Fashion preview in the virtual fitting studio"
+                    src={personPreview || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1400&auto=format&fit=crop'}
+                    alt={personPreview ? 'Your selected photo in the fitting studio preview' : 'Fashion preview in the virtual fitting studio'}
                     className="studio-model-image h-[430px] w-full object-cover sm:h-[560px] xl:h-[610px]"
                   />
                   <div className="studio-model-vignette pointer-events-none absolute inset-0" />
