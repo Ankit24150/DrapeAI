@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const links = [
   { label: 'Home', href: '#top' },
@@ -21,25 +22,19 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header
-      id="top"
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? 'bg-canvas/80 backdrop-blur-md border-b border-stone/70'
-          : 'bg-transparent border-b border-transparent'
-      }`}
-    >
-      <nav className="mx-auto max-w-content px-6 md:px-10 h-[76px] flex items-center justify-between">
-        <a href="#top" className="font-display text-[22px] font-semibold tracking-tightest text-ink">
+    <header id="top" className="fixed inset-x-0 top-4 z-50 px-4">
+      <nav className={`studio-navbar mx-auto flex h-[68px] max-w-6xl items-center justify-between rounded-full border px-5 transition-all duration-500 md:px-8 ${scrolled ? 'is-scrolled' : ''}`}>
+        <a href="#top" className="flex items-center gap-2.5 font-display text-[21px] font-semibold tracking-tightest text-white">
+          <span className="studio-brand-mark grid h-8 w-8 place-items-center rounded-xl text-[12px]">D</span>
           DrapeAI
         </a>
 
-        <ul className="hidden lg:flex items-center gap-10 font-body text-[14.5px] text-charcoal">
+        <ul className="hidden items-center gap-8 font-body text-[13px] text-slate-300 lg:flex">
           {links.map((l) => (
             <li key={l.label}>
               <a
                 href={l.href}
-                className="relative py-2 transition-colors hover:text-ink after:absolute after:left-0 after:-bottom-0.5 after:h-px after:w-0 after:bg-brass after:transition-all after:duration-300 hover:after:w-full"
+                className="relative py-2 transition-colors hover:text-cyan-200 after:absolute after:left-0 after:-bottom-0.5 after:h-px after:w-0 after:bg-cyan-300 after:transition-all after:duration-300 hover:after:w-full"
               >
                 {l.label}
               </a>
@@ -47,13 +42,16 @@ export default function Navbar() {
           ))}
         </ul>
 
-        <div className="hidden lg:flex items-center gap-6">
-          <Link to="/login" className="font-body text-[14.5px] text-charcoal hover:text-ink transition-colors">
+        <div className="hidden items-center gap-5 lg:flex">
+          <span className="flex items-center gap-2 font-body text-[9px] uppercase tracking-[0.12em] text-slate-400">
+            <i className="studio-engine-beacon h-1.5 w-1.5 rounded-full bg-emerald-300" /> VTON Engine v2.4 Live
+          </span>
+          <Link to="/login" className="font-body text-[13px] text-slate-300 transition-colors hover:text-white">
             Login
           </Link>
           <Link
             to="/signup"
-            className="font-body text-[14px] tracking-wide bg-ink text-canvas px-5 py-2.5 rounded-full hover:bg-brass transition-colors duration-300"
+            className="studio-navbar-cta rounded-full px-5 py-2.5 font-body text-[12px] tracking-wide text-white transition-all duration-300 hover:-translate-y-0.5"
           >
             Get Started
           </Link>
@@ -64,18 +62,19 @@ export default function Navbar() {
           aria-label={open ? 'Close menu' : 'Open menu'}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className="lg:hidden text-ink p-2 -mr-2"
+          className="rounded-full p-2 text-slate-200 transition-colors hover:bg-white/10 lg:hidden"
         >
           {open ? <X size={24} /> : <Menu size={24} />}
         </button>
       </nav>
 
+      <AnimatePresence>
       {open && (
-        <div className="lg:hidden bg-canvas border-t border-stone/70 px-6 pb-8 pt-2">
-          <ul className="flex flex-col gap-5 pt-4 font-body text-[16px] text-charcoal">
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="studio-mobile-menu mx-auto mt-3 max-w-6xl rounded-3xl border px-6 pb-6 pt-2 lg:hidden">
+          <ul className="flex flex-col gap-4 pt-4 font-body text-[14px] text-slate-300">
             {links.map((l) => (
               <li key={l.label}>
-                <a href={l.href} onClick={() => setOpen(false)} className="block py-1 hover:text-ink">
+                <a href={l.href} onClick={() => setOpen(false)} className="block py-1 transition-colors hover:text-cyan-200">
                   {l.label}
                 </a>
               </li>
@@ -85,20 +84,21 @@ export default function Navbar() {
             <Link
               to="/login"
               onClick={() => setOpen(false)}
-              className="text-center font-body text-[15px] border border-stoneDark/60 text-ink px-5 py-3 rounded-full"
+              className="rounded-full border border-white/15 px-5 py-3 text-center font-body text-[14px] text-white"
             >
               Login
             </Link>
             <Link
               to="/signup"
               onClick={() => setOpen(false)}
-              className="text-center font-body text-[15px] bg-ink text-canvas px-5 py-3 rounded-full"
+              className="studio-navbar-cta rounded-full px-5 py-3 text-center font-body text-[14px] text-white"
             >
               Get Started
             </Link>
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </header>
   );
 }

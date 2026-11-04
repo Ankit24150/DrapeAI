@@ -28,12 +28,20 @@ function Step({ n, title, copy, index }: { n: string; title: string; copy: strin
   return (
     <div
       ref={ref}
-      className="reveal border-t border-stone/80 pt-7 md:pt-8"
+      onMouseMove={(event) => {
+        const bounds = event.currentTarget.getBoundingClientRect();
+        event.currentTarget.style.setProperty('--spotlight-x', `${event.clientX - bounds.left}px`);
+        event.currentTarget.style.setProperty('--spotlight-y', `${event.clientY - bounds.top}px`);
+      }}
+      className={`reveal studio-bento-card studio-step-card group relative overflow-hidden rounded-2xl border p-6 sm:p-7 ${index === 0 ? 'lg:col-span-2' : ''}`}
       style={{ transitionDelay: `${index * 90}ms` }}
     >
-      <span className="font-display text-[15px] text-brass">{n}</span>
-      <h3 className="font-display text-[22px] mt-3 text-ink">{title}</h3>
-      <p className="font-body text-[15px] leading-relaxed text-charcoal mt-3 max-w-[260px]">{copy}</p>
+      <div className="relative z-10 flex items-center justify-between">
+        <span className="studio-step-icon grid h-11 w-11 place-items-center rounded-xl font-display text-[14px] text-cyan-100">{n}</span>
+        <span className="font-body text-[9px] uppercase tracking-[0.16em] text-slate-500">Process / {n}</span>
+      </div>
+      <h3 className="relative z-10 mt-7 font-display text-[22px] text-white">{title}</h3>
+      <p className="relative z-10 mt-3 max-w-[300px] font-body text-[14px] leading-relaxed text-slate-400">{copy}</p>
     </div>
   );
 }
@@ -42,15 +50,17 @@ export default function HowItWorks() {
   const headingRef = useReveal<HTMLDivElement>();
 
   return (
-    <section id="how-it-works" className="py-24 md:py-32 border-t border-stone/70">
-      <div className="mx-auto max-w-content px-6 md:px-10">
+    <section id="how-it-works" className="studio-bento-section relative overflow-hidden border-t border-white/10 py-24 md:py-32">
+      <div className="studio-bento-glow" aria-hidden="true" />
+      <div className="relative z-10 mx-auto max-w-content px-6 md:px-10">
         <div ref={headingRef} className="reveal max-w-[560px]">
-          <h2 className="font-display font-semibold text-[36px] md:text-[46px] leading-[1.06] tracking-tightest text-ink">
-            How DrapeAI works
+          <p className="mb-4 font-body text-[10px] uppercase tracking-[0.2em] text-cyan-300">A seamless fitting flow</p>
+          <h2 className="font-display text-[36px] font-semibold leading-[1.06] tracking-tightest text-white md:text-[46px]">
+            How DrapeAI <span className="studio-gradient-text">works.</span>
           </h2>
         </div>
 
-        <div className="mt-14 md:mt-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:mt-16 lg:grid-cols-4">
           {steps.map((s, i) => (
             <Step key={s.n} n={s.n} title={s.title} copy={s.copy} index={i} />
           ))}
